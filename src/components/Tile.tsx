@@ -46,12 +46,13 @@ const Tile = ({
       }
       return 'adj-0';
     }
+    // After game is over show all mines
+    if (gameOver && tile.mine) {
+      return 'bomb';
+    }
     // Tile flagged
     if (tile.state === TileState.Flagged) {
       return 'flagged';
-    }
-    if (gameOver && tile.mine) {
-      return 'bomb';
     }
     // Tile unopened
     return 'unopened';
