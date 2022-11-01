@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react';
+import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils';
 import Tile from './Tile';
 
 export enum TileState {
@@ -67,38 +68,6 @@ const GameBoard: FC<GameBoardProps> = ({
     return grid;
   }
 
-  function coordsToIndex(row: number, col: number) {
-    return row * width + col;
-  }
-
-  function indexToCoords(index: number) {
-    const row = Math.floor(index / width);
-    const col = index % width;
-    return { row, col };
-  }
-
-  // Returns coordinates of existing tiles around the given tile
-  function getSurroundingCoords(row: number, col: number, length?: number) {
-    const searchLength = length ?? 1;
-    const possibleRows = [row];
-    for (let i = 1; i < searchLength + 1; i++) {
-      possibleRows.push(row - i, row + i);
-    }
-    const existingRows = possibleRows.filter((r) => r >= 0 && r < height);
-    const possibleCols = [col];
-    for (let i = 1; i < searchLength + 1; i++) {
-      possibleCols.push(col - i, col + i);
-    }
-    const existingCols = possibleCols.filter((c) => c >= 0 && c < width);
-    const adjcentCoords: { row: number; col: number }[] = [];
-    for (const r of existingRows) {
-      for (const c of existingCols) {
-        adjcentCoords.push({ row: r, col: c });
-      }
-    }
-    return adjcentCoords;
-  }
-
   function cascadeOpen(row: number, col: number, grid: ITile[][]) {
     grid = [...grid];
     if (grid[row][col].state === TileState.Opened) return grid;
@@ -107,7 +76,7 @@ const GameBoard: FC<GameBoardProps> = ({
     if (tile.adjacent !== 0 || tile.mine) {
       return grid;
     }
-    getSurroundingCoords(row, col).forEach((coordinate) => {
+    getSurroundingCoords(row, col, width, height).forEach((coordinate) => {
       const { row, col } = coordinate;
       grid = cascadeOpen(row, col, grid);
     });
@@ -120,8 +89,8 @@ const GameBoard: FC<GameBoardProps> = ({
     const allIndexes = Array.from(Array(TILE_COUNT).keys());
     const mineIndexes = [];
     // Make sure first click area is not a mine
-    const firstClickArea = getSurroundingCoords(clickRow, clickCol, 2);
-    const firstClickAreaIndexes = firstClickArea.map((coord) => coordsToIndex(coord.row, coord.col));
+    const firstClickArea = getSurroundingCoords(clickRow, clickCol, width, height, 2);
+    const firstClickAreaIndexes = firstClickArea.map((coord) => coordsToIndex(coord.row, coord.col, width));
     const filteredIndexes = allIndexes.filter((index) => !firstClickAreaIndexes.includes(index));
 
     // Generate mine indexes
@@ -146,9 +115,9 @@ const GameBoard: FC<GameBoardProps> = ({
     // Set number of adjacent mines for each tile
     for (let i = 0; i < TILE_COUNT; i++) {
       // Get coords of mine in current iteration
-      const { row, col } = indexToCoords(i);
+      const { row, col } = indexToCoords(i, width);
       let adjacentMineCount = 0;
-      const surroundingCoords = getSurroundingCoords(row, col);
+      const surroundingCoords = getSurroundingCoords(row, col, width, height);
       surroundingCoords.forEach((coordinate) => {
         if (coordinate.row === row && coordinate.col === col) return;
         if (newGrid[coordinate.row][coordinate.col].mine) {
@@ -161,7 +130,7 @@ const GameBoard: FC<GameBoardProps> = ({
   }
 
   function handleLeftClick(row: number, col: number) {
-    console.log('clicked tile', { row, col }, grid[row][col]);
+    console.log('leftclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
       console.log('tile already opened');
       return;
@@ -184,11 +153,26 @@ const GameBoard: FC<GameBoardProps> = ({
       return;
     }
 
-    // Bubble open adjacent tiles
-
     // If no more mines unflagged mines remaining, game won
     // TODO - check if all mines are flagged
   }
+
+  function handleRightClick(row: number, col: number) {
+    console.log('rightclicked tile', { row, col }, grid[row][col]);
+    if (grid[row][col].state === TileState.Opened) {
+      console.log('tile already opened');
+      return;
+    }
+    const newGrid = [...grid];
+    const tile = newGrid[row][col];
+    if (tile.state === TileState.Hidden) {
+      tile.state = TileState.Flagged;
+    } else {
+      tile.state = TileState.Hidden;
+    }
+    setGrid(newGrid);
+  }
+
   return (
     <div className="gameBoard">
       <header>
@@ -199,7 +183,15 @@ const GameBoard: FC<GameBoardProps> = ({
           return (
             <div key={rowIndex} className="row" style={{ display: 'flex' }}>
               {row.map((tile, colIndex) => {
-                return <Tile gameOver={gameOver} tile={tile} key={colIndex} handleLeftClick={() => handleLeftClick(rowIndex, colIndex)} />;
+                return (
+                  <Tile
+                    gameOver={gameOver}
+                    tile={tile}
+                    key={colIndex}
+                    handleLeftClick={() => handleLeftClick(rowIndex, colIndex)}
+                    handleRightClick={() => handleRightClick(rowIndex, colIndex)}
+                  />
+                );
               })}
             </div>
           );

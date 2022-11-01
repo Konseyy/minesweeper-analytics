@@ -1,0 +1,66 @@
+.tile {
+  background-size: cover;
+
+  &.unopened {
+    background-image: url('./assets/facingDown.png');
+    cursor: pointer;
+  }
+
+  &.flagged {
+    background-image: url('./assets/flagged.png');
+    cursor: pointer;
+  }
+
+  &.bomb {
+    background-image: url('./assets/facingDown.png');
+
+    &:after {
+      content: '';
+      display: block;
+      height: 100%;
+      width: 100%;
+      background-image: url('./assets/bomb.png');
+      background-size: cover;
+    }
+  }
+
+  &.redBomb {
+    background-image: url('./assets/openBomb.png');
+  }
+
+  &.adj-0 {
+    background-image: url('./assets/0.png');
+  }
+
+  &.adj-1 {
+    background-image: url('./assets/1.png');
+  }
+
+  &.adj-2 {
+    background-image: url('./assets/2.png');
+  }
+
+  &.adj-3 {
+    background-image: url('./assets/3.png');
+  }
+
+  &.adj-4 {
+    background-image: url('./assets/4.png');
+  }
+
+  &.adj-5 {
+    background-image: url('./assets/5.png');
+  }
+
+  &.adj-6 {
+    background-image: url('./assets/6.png');
+  }
+
+  &.adj-7 {
+    background-image: url('./assets/7.png');
+  }
+
+  &.adj-8 {
+    background-image: url('./assets/8.png');
+  }
+}
