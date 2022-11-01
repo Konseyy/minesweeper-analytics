@@ -130,6 +130,7 @@ const GameBoard: FC<GameBoardProps> = ({
   }
 
   function handleLeftClick(row: number, col: number) {
+    if (gameOver) return;
     console.log('leftclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
       console.log('tile already opened');
@@ -158,6 +159,7 @@ const GameBoard: FC<GameBoardProps> = ({
   }
 
   function handleRightClick(row: number, col: number) {
+    if (gameOver) return;
     console.log('rightclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
       console.log('tile already opened');
