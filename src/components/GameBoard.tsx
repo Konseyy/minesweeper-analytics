@@ -1,5 +1,6 @@
 import React, { FC, useState } from 'react';
 import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils';
+import { Difficulty, GameState } from './Controller';
 import Tile from './Tile';
 
 export enum TileState {
@@ -15,10 +16,6 @@ export interface ITile {
   mineProbability?: number;
 }
 
-const DEFAULT_WIDTH = 15 as const;
-const DEFAULT_HEIGHT = 25 as const;
-const DEFAULT_MINE_PERCENTAGE = 0.2 as const;
-
 const DEFAULT_TILE = {
   mine: false,
   state: TileState.Hidden,
@@ -33,29 +30,24 @@ interface GameBoardProps {
   height?: number;
   width?: number;
   minePercentage?: number;
-  onWin?: () => void;
-  onLose?: () => void;
+  onWin: () => void;
+  onLose: () => void;
+  gameState: GameState;
+  setGameState: (gameState: GameState) => void;
+  onMenu: () => void;
+  difficulty: Difficulty;
+  timer: number;
 }
 
-const GameBoard: FC<GameBoardProps> = ({
-  height = DEFAULT_HEIGHT,
-  width = DEFAULT_WIDTH,
-  minePercentage = DEFAULT_MINE_PERCENTAGE,
-  onWin,
-  onLose,
-}) => {
+const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState, onMenu, difficulty, timer }) => {
+  const height = difficulty === 'easy' ? 13 : difficulty === 'medium' ? 16 : 28;
+  const width = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 12 : 20;
+  const minePercentage = difficulty === 'easy' ? 0.1 : difficulty === 'medium' ? 0.2 : 0.3;
   const TILE_COUNT = height * width;
   const MINE_COUNT = Math.floor(TILE_COUNT * minePercentage);
   // Create initial set of tiles
   const [grid, setGrid] = useState<ITile[][]>(getStartingGrid());
   const [firstClicked, setFirstClicked] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
-
-  function restartGame() {
-    setGrid(getStartingGrid());
-    setFirstClicked(false);
-    setGameOver(false);
-  }
 
   function getStartingGrid() {
     const grid = Array(height);
@@ -130,7 +122,7 @@ const GameBoard: FC<GameBoardProps> = ({
   }
 
   function handleLeftClick(row: number, col: number) {
-    if (gameOver) return;
+    if (gameState !== 'playing') return;
     console.log('leftclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
       console.log('tile already opened');
@@ -149,17 +141,23 @@ const GameBoard: FC<GameBoardProps> = ({
     // If tile is a mine, game over
     if (grid[row][col].mine) {
       console.log('game over');
-      onLose?.();
-      setGameOver(true);
+      onLose();
       return;
     }
 
-    // If no more mines unflagged mines remaining, game won
-    // TODO - check if all mines are flagged
+    // Check if any open tiles remaining
+    for (let i = 0; i < TILE_COUNT; i++) {
+      const { row, col } = indexToCoords(i, width);
+      if (grid[row][col].state === TileState.Hidden && !grid[row][col].mine) {
+        return;
+      }
+    }
+    console.log('you win');
+    onWin();
   }
 
   function handleRightClick(row: number, col: number) {
-    if (gameOver) return;
+    if (gameState !== 'playing') return;
     console.log('rightclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
       console.log('tile already opened');
@@ -178,7 +176,8 @@ const GameBoard: FC<GameBoardProps> = ({
   return (
     <div className="gameBoard">
       <header>
-        <button onClick={restartGame}>Restart Game</button>
+        <button onClick={onMenu}>Back to menu</button>
+        <div className="timer">{timer}s</div>
       </header>
       <main>
         {grid.map((row, rowIndex) => {
@@ -187,7 +186,7 @@ const GameBoard: FC<GameBoardProps> = ({
               {row.map((tile, colIndex) => {
                 return (
                   <Tile
-                    gameOver={gameOver}
+                    gameOver={gameState !== 'playing'}
                     tile={tile}
                     key={colIndex}
                     handleLeftClick={() => handleLeftClick(rowIndex, colIndex)}

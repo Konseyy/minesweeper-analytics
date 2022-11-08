@@ -1,10 +1,10 @@
 import './App.css';
-import GameBoard from './components/GameBoard';
+import Controller from './components/Controller';
 
 function App() {
   return (
     <div className="App">
-      <GameBoard />
+      <Controller />
     </div>
   );
 }
