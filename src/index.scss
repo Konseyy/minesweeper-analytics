@@ -63,4 +63,16 @@
   &.adj-8 {
     background-image: url('./assets/8.png');
   }
+
+  .probability {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+    user-select: none;
+    font-weight: bold;
+  }
 }

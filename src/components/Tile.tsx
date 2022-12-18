@@ -1,17 +1,20 @@
 import React from 'react';
 import { ITile, TileState } from './GameBoard';
 const TILE_SIZE = 30;
+const PROBABILITY_OPACITY_COEFFICIENT = 0.75;
 
 const Tile = ({
   tile,
   handleLeftClick,
   handleRightClick,
   gameOver,
+  showProbability,
 }: {
   tile: ITile;
   handleLeftClick(): void;
   handleRightClick(): void;
   gameOver: boolean;
+  showProbability: boolean;
 }) => {
   const getTileClassName = () => {
     // Tile opened
@@ -59,15 +62,37 @@ const Tile = ({
     // return tile.mine ? 'X' : '?';
   };
   return (
-    <div
-      onClick={handleLeftClick}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        handleRightClick();
-      }}
-      className={`tile ${getTileClassName()}`}
-      style={{ height: TILE_SIZE, width: TILE_SIZE }}
-    />
+    <div style={{ position: 'relative', height: TILE_SIZE, width: TILE_SIZE }} className={`tile ${getTileClassName()}`}>
+      <div
+        onClick={handleLeftClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          handleRightClick();
+        }}
+        style={{ position: 'absolute', height: '100%', width: '100%' }}
+      />
+      {showProbability && tile.state !== TileState.Opened && <Probability probability={tile.mineProbability} />}
+    </div>
+  );
+};
+
+const Probability = ({ probability }: { probability: ITile['mineProbability'] }) => {
+  const getDisplayedProbability = () => {
+    switch (probability) {
+      case undefined:
+        return '?';
+      default:
+        return probability;
+    }
+  };
+  if (probability === undefined) return null;
+  const getBackgroundColor = () => {
+    return `rgba(255,0,0,${(probability / 100) * PROBABILITY_OPACITY_COEFFICIENT})`;
+  };
+  return (
+    <div className="probability" style={{ backgroundColor: probability !== 0 ? getBackgroundColor() : 'rgba(0, 128, 0, .6)' }}>
+      {getDisplayedProbability()}
+    </div>
   );
 };
 

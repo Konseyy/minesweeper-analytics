@@ -1,5 +1,6 @@
 import React, { FC, useState } from 'react';
-import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils';
+import { calculateProbabilities } from '../utils/probabilities';
+import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils/coordinates';
 import { Difficulty, GameState } from './Controller';
 import Tile from './Tile';
 
@@ -48,6 +49,8 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
   // Create initial set of tiles
   const [grid, setGrid] = useState<ITile[][]>(getStartingGrid());
   const [firstClicked, setFirstClicked] = useState(false);
+  const [showProbability, setShowProbability] = useState(false);
+  const [remainingMines, setRemainingMines] = useState(MINE_COUNT);
 
   function getStartingGrid() {
     const grid = Array(height);
@@ -118,7 +121,9 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
       });
       newGrid[row][col].adjacent = adjacentMineCount;
     }
-    setGrid(cascadeOpen(clickRow, clickCol, newGrid));
+    console.time('calculateProbabilities');
+    setGrid(calculateProbabilities(cascadeOpen(clickRow, clickCol, newGrid), width, height));
+    console.timeEnd('calculateProbabilities');
   }
 
   function handleLeftClick(row: number, col: number) {
@@ -136,7 +141,10 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
     }
 
     // Open the tile
-    setGrid(cascadeOpen(row, col, grid));
+    const newGrid = cascadeOpen(row, col, grid);
+    console.time('calculateProbabilities');
+    setGrid(calculateProbabilities(newGrid, width, height));
+    console.timeEnd('calculateProbabilities');
 
     // If tile is a mine, game over
     if (grid[row][col].mine) {
@@ -160,14 +168,15 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
     if (gameState !== 'playing') return;
     console.log('rightclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
-      console.log('tile already opened');
       return;
     }
     const newGrid = [...grid];
     const tile = newGrid[row][col];
     if (tile.state === TileState.Hidden) {
+      setRemainingMines((old) => old - 1);
       tile.state = TileState.Flagged;
     } else {
+      setRemainingMines((old) => old + 1);
       tile.state = TileState.Hidden;
     }
     setGrid(newGrid);
@@ -178,6 +187,10 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
       <header>
         <button onClick={onMenu}>Back to menu</button>
         <div className="timer">{timer}s</div>
+        <button onClick={() => setShowProbability((old) => !old)}>
+          {showProbability ? 'Showing probability' : 'Not showing probability'}
+        </button>
+        <div>Remaining mines: {remainingMines}</div>
       </header>
       <main>
         {grid.map((row, rowIndex) => {
@@ -186,6 +199,7 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
               {row.map((tile, colIndex) => {
                 return (
                   <Tile
+                    showProbability={showProbability}
                     gameOver={gameState !== 'playing'}
                     tile={tile}
                     key={colIndex}
