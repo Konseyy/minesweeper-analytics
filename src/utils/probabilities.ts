@@ -2,7 +2,7 @@ import { ITile, TileState } from '../components/GameBoard';
 import { getSurroundingCoords } from './coordinates';
 
 export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number, boardHeight: number): ITile[][] {
-  let changed = false;
+  let changed = false; // Track whether a new tile has been guaranteed to be a mine or empty, if so, recalculate probabilities again
   for (let row = 0; row < boardHeight; row++) {
     if (changed) break; // if a change was made, recalculate probabilities again
     for (let col = 0; col < boardWidth; col++) {
@@ -42,7 +42,6 @@ export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number,
           const prevProbability = gameBoard[n.row][n.col].mineProbability;
           if (prevProbability === undefined || newProbability > prevProbability) {
             gameBoard[n.row][n.col].mineProbability = newProbability;
-            changed = true;
           }
         }
       }
