@@ -15,6 +15,7 @@ export interface ITile {
   state: TileState;
   adjacent: number;
   mineProbability?: number;
+  changedOnTurnIdentifier?: number; // Keep track of which turn the tile probability was last changed.
 }
 
 const DEFAULT_TILE = {
@@ -40,6 +41,8 @@ interface GameBoardProps {
   timer: number;
 }
 
+let leftClickCount = 0;
+
 const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState, onMenu, difficulty, timer }) => {
   const height = difficulty === 'easy' ? 13 : difficulty === 'medium' ? 16 : 28;
   const width = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 12 : 20;
@@ -51,6 +54,19 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
   const [firstClicked, setFirstClicked] = useState(false);
   const [showProbability, setShowProbability] = useState(false);
   const [remainingMines, setRemainingMines] = useState(MINE_COUNT);
+
+  function recalculateProbabilities() {
+    console.time('calculateProbabilities');
+    setGrid(
+      calculateProbabilities(
+        grid.map((row) => row.map((tile) => ({ ...tile, mineProbability: undefined }))),
+        width,
+        height,
+        0
+      )
+    );
+    console.timeEnd('calculateProbabilities');
+  }
 
   function getStartingGrid() {
     const grid = Array(height);
@@ -122,11 +138,12 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
       newGrid[row][col].adjacent = adjacentMineCount;
     }
     console.time('calculateProbabilities');
-    setGrid(calculateProbabilities(cascadeOpen(clickRow, clickCol, newGrid), width, height));
+    setGrid(calculateProbabilities(cascadeOpen(clickRow, clickCol, newGrid), width, height, leftClickCount));
     console.timeEnd('calculateProbabilities');
   }
 
   function handleLeftClick(row: number, col: number) {
+    leftClickCount++;
     if (gameState !== 'playing') return;
     console.log('leftclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
@@ -143,7 +160,7 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
     // Open the tile
     const newGrid = cascadeOpen(row, col, grid);
     console.time('calculateProbabilities');
-    setGrid(calculateProbabilities(newGrid, width, height));
+    setGrid(calculateProbabilities(newGrid, width, height, leftClickCount));
     console.timeEnd('calculateProbabilities');
 
     // If tile is a mine, game over
@@ -188,8 +205,11 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
         <button onClick={onMenu}>Back to menu</button>
         <div className="timer">{timer}s</div>
         <button onClick={() => setShowProbability((old) => !old)}>
-          {showProbability ? 'Showing probability' : 'Not showing probability'}
+          {showProbability ? 'Showing probabilities' : 'Not showing probabilities'}
         </button>
+        <div>
+          <button onClick={recalculateProbabilities}>Recalculate probabilities</button>
+        </div>
         <div>Remaining mines: {remainingMines}</div>
       </header>
       <main>

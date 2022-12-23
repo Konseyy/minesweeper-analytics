@@ -1,7 +1,7 @@
 import { ITile, TileState } from '../components/GameBoard';
 import { getSurroundingCoords } from './coordinates';
 
-export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number, boardHeight: number): ITile[][] {
+export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number, boardHeight: number, turnIdentifier: number): ITile[][] {
   let changed = false; // Track whether a new tile has been guaranteed to be a mine or empty, if so, recalculate probabilities again
   for (let row = 0; row < boardHeight; row++) {
     if (changed) break; // if a change was made, recalculate probabilities again
@@ -12,11 +12,12 @@ export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number,
       const unopenedNeighbors = neighbors.filter((n) => gameBoard[n.row][n.col].state !== TileState.Opened);
       if (unopenedNeighbors.length === 0) continue; // No need to calculate probabilities if there are no unopened neighbors
       const guaranteedNeighbors = unopenedNeighbors.filter((n) => gameBoard[n.row][n.col].mineProbability === 100);
+      const emptyNeighbors = unopenedNeighbors.filter((n) => gameBoard[n.row][n.col].mineProbability === 0);
       if (currentTile.state === TileState.Opened) {
-        if (currentTile.adjacent === unopenedNeighbors.length) {
+        if (currentTile.adjacent === unopenedNeighbors.length - emptyNeighbors.length) {
           // If amount of adjacent mines is equal to adjacent tiles, all are mines
           for (const n of unopenedNeighbors) {
-            if (gameBoard[n.row][n.col].mineProbability !== 100) {
+            if (gameBoard[n.row][n.col].mineProbability !== 100 && gameBoard[n.row][n.col].mineProbability !== 0) {
               gameBoard[n.row][n.col].mineProbability = 100;
               changed = true;
             }
@@ -38,17 +39,26 @@ export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number,
           if (gameBoard[n.row][n.col].mineProbability === 100) continue; // dont overwrite 100% probability
           if (gameBoard[n.row][n.col].mineProbability === 0) continue; // dont overwrite 0% probability
           const neighborsWithoutMines = unopenedNeighbors.filter((n) => gameBoard[n.row][n.col].mineProbability !== 100);
-          const newProbability = Math.round(((currentTile.adjacent - guaranteedNeighbors.length) / neighborsWithoutMines.length) * 100);
+          const newProbability = Math.round(
+            ((currentTile.adjacent - guaranteedNeighbors.length) / (neighborsWithoutMines.length - emptyNeighbors.length)) * 100
+          );
           const prevProbability = gameBoard[n.row][n.col].mineProbability;
-          if (prevProbability === undefined || newProbability > prevProbability) {
+          const prevTurnIdentifier = gameBoard[n.row][n.col].changedOnTurnIdentifier;
+          if (
+            prevTurnIdentifier === undefined ||
+            prevTurnIdentifier !== turnIdentifier ||
+            prevProbability === undefined ||
+            newProbability > prevProbability
+          ) {
             gameBoard[n.row][n.col].mineProbability = newProbability;
+            gameBoard[n.row][n.col].changedOnTurnIdentifier = turnIdentifier;
           }
         }
       }
     }
   }
   if (changed) {
-    return calculateProbabilities(gameBoard, boardWidth, boardHeight);
+    return calculateProbabilities(gameBoard, boardWidth, boardHeight, turnIdentifier);
   }
   return [...gameBoard];
 }
