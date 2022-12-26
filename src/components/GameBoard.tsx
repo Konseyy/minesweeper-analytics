@@ -1,8 +1,9 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { calculateProbabilities } from '../utils/probabilities';
 import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils/coordinates';
-import { Difficulty, GameState } from './Controller';
+import { Difficulty } from './Controller';
 import Tile from './Tile';
+import { useParams, Link } from 'react-router-dom';
 
 export enum TileState {
   Hidden,
@@ -32,18 +33,13 @@ interface GameBoardProps {
   height?: number;
   width?: number;
   minePercentage?: number;
-  onWin: () => void;
-  onLose: () => void;
-  gameState: GameState;
-  setGameState: (gameState: GameState) => void;
-  onMenu: () => void;
-  difficulty: Difficulty;
-  timer: number;
 }
 
 let leftClickCount = 0;
+let timerTracker: number | null = null;
 
-const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState, onMenu, difficulty, timer }) => {
+const GameBoard: FC<GameBoardProps> = ({}) => {
+  const difficulty = useParams().difficulty as Difficulty;
   const height = difficulty === 'easy' ? 13 : difficulty === 'medium' ? 16 : 28;
   const width = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 12 : 20;
   const minePercentage = difficulty === 'easy' ? 0.1 : difficulty === 'medium' ? 0.2 : 0.3;
@@ -54,6 +50,17 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
   const [firstClicked, setFirstClicked] = useState(false);
   const [showProbability, setShowProbability] = useState(false);
   const [remainingMines, setRemainingMines] = useState(MINE_COUNT);
+  const [timer, setTimer] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+
+  useEffect(() => {
+    timerTracker = window.setInterval(() => {
+      setTimer((timer) => timer + 1);
+    }, 1000);
+    return () => {
+      clearInterval(timerTracker ?? 0);
+    };
+  }, []);
 
   function recalculateProbabilities() {
     console.time('calculateProbabilities');
@@ -68,6 +75,28 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
     console.timeEnd('calculateProbabilities');
   }
 
+  function endGame(won: boolean) {
+    clearInterval(timerTracker!);
+
+    const highScores = localStorage.getItem('highScores');
+    if (highScores) {
+      const parsed = JSON.parse(highScores);
+      if (parsed[difficulty!] === undefined || timer < parsed[difficulty!].time) {
+        parsed[difficulty!] = { time: timer, date: Date.now() };
+        localStorage.setItem('highScores', JSON.stringify(parsed));
+      }
+    }
+    const newHighScores = {
+      [difficulty!]: { time: timer, date: Date.now() },
+    };
+    localStorage.setItem('highScores', JSON.stringify(newHighScores));
+    setGameOver(true);
+    if (won) {
+      alert(`You won! (${timer}s)`);
+    } else {
+      alert(`You lost! (${timer}s)`);
+    }
+  }
   function getStartingGrid() {
     const grid = Array(height);
     for (let row = 0; row < height; row++) {
@@ -144,7 +173,7 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
 
   function handleLeftClick(row: number, col: number) {
     leftClickCount++;
-    if (gameState !== 'playing') return;
+    if (gameOver) return;
     console.log('leftclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
       console.log('tile already opened');
@@ -166,7 +195,7 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
     // If tile is a mine, game over
     if (grid[row][col].mine) {
       console.log('game over');
-      onLose();
+      endGame(false);
       return;
     }
 
@@ -178,11 +207,11 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
       }
     }
     console.log('you win');
-    onWin();
+    endGame(true);
   }
 
   function handleRightClick(row: number, col: number) {
-    if (gameState !== 'playing') return;
+    if (gameOver) return;
     console.log('rightclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === TileState.Opened) {
       return;
@@ -202,7 +231,10 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
   return (
     <div className="gameBoard">
       <header>
-        <button onClick={onMenu}>Back to menu</button>
+        <button>
+          <Link to="/difficulty">Back to menu</Link>
+        </button>
+
         <div className="timer">{timer}s</div>
         <button onClick={() => setShowProbability((old) => !old)}>
           {showProbability ? 'Showing probabilities' : 'Not showing probabilities'}
@@ -220,7 +252,7 @@ const GameBoard: FC<GameBoardProps> = ({ onWin, onLose, gameState, setGameState,
                 return (
                   <Tile
                     showProbability={showProbability}
-                    gameOver={gameState !== 'playing'}
+                    gameOver={gameOver}
                     tile={tile}
                     key={colIndex}
                     handleLeftClick={() => handleLeftClick(rowIndex, colIndex)}
