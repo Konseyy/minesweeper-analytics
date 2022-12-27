@@ -1,5 +1,5 @@
 import React from 'react';
-import { ITile, TileState } from './GameBoard';
+import { ITile } from './GameBoard';
 const TILE_SIZE = 30;
 const PROBABILITY_OPACITY_COEFFICIENT = 0.75;
 
@@ -18,7 +18,7 @@ const Tile = ({
 }) => {
   const getTileClassName = () => {
     // Tile opened
-    if (tile.state === TileState.Opened) {
+    if (tile.state === 'opened') {
       // Opened mine
       if (tile.mine) {
         if (gameOver) {
@@ -54,7 +54,7 @@ const Tile = ({
       return 'bomb';
     }
     // Tile flagged
-    if (tile.state === TileState.Flagged) {
+    if (tile.state === 'flagged') {
       return 'flagged';
     }
     // Tile unopened
@@ -71,7 +71,7 @@ const Tile = ({
         }}
         style={{ position: 'absolute', height: '100%', width: '100%' }}
       />
-      {showProbability && tile.state !== TileState.Opened && <Probability probability={tile.mineProbability} />}
+      {showProbability && tile.state !== 'opened' && <Probability probability={tile.mineProbability} />}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { ITile, TileState } from '../components/GameBoard';
+import { ITile } from '../components/GameBoard';
 import { getSurroundingCoords } from './coordinates';
 
 export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number, boardHeight: number, turnIdentifier: number): ITile[][] {
@@ -9,11 +9,11 @@ export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number,
       const currentTile = gameBoard[row][col]; //Currently looking at the probabilities of this tiles neighbors
       if (currentTile.adjacent === 0) continue; // No need to calculate probabilities if there are no adjacent mines
       const neighbors = getSurroundingCoords(row, col, boardWidth, boardHeight);
-      const unopenedNeighbors = neighbors.filter((n) => gameBoard[n.row][n.col].state !== TileState.Opened);
+      const unopenedNeighbors = neighbors.filter((n) => gameBoard[n.row][n.col].state !== 'opened');
       if (unopenedNeighbors.length === 0) continue; // No need to calculate probabilities if there are no unopened neighbors
       const guaranteedNeighbors = unopenedNeighbors.filter((n) => gameBoard[n.row][n.col].mineProbability === 100);
       const emptyNeighbors = unopenedNeighbors.filter((n) => gameBoard[n.row][n.col].mineProbability === 0);
-      if (currentTile.state === TileState.Opened) {
+      if (currentTile.state === 'opened') {
         if (currentTile.adjacent === unopenedNeighbors.length - emptyNeighbors.length) {
           // If amount of adjacent mines is equal to adjacent tiles, all are mines
           for (const n of unopenedNeighbors) {

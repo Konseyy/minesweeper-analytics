@@ -3,13 +3,9 @@ import { calculateProbabilities } from '../utils/probabilities';
 import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils/coordinates';
 import { Difficulty } from './Controller';
 import Tile from './Tile';
-import { useParams, Link } from 'react-router-dom';
-
-export enum TileState {
-  Hidden,
-  Opened,
-  Flagged,
-}
+import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { decodeGrid, encodeGrid } from '../utils/shareGame';
+type TileState = 'hidden' | 'opened' | 'flagged';
 
 export interface ITile {
   mine: boolean;
@@ -21,7 +17,7 @@ export interface ITile {
 
 const DEFAULT_TILE = {
   mine: false,
-  state: TileState.Hidden,
+  state: 'hidden',
   adjacent: 0,
 };
 
@@ -45,6 +41,7 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
   const minePercentage = difficulty === 'easy' ? 0.1 : difficulty === 'medium' ? 0.2 : 0.3;
   const TILE_COUNT = height * width;
   const MINE_COUNT = Math.floor(TILE_COUNT * minePercentage);
+  const [queryParams, setQueryParams] = useSearchParams();
   // Create initial set of tiles
   const [grid, setGrid] = useState<ITile[][]>(getStartingGrid());
   const [firstClicked, setFirstClicked] = useState(false);
@@ -54,6 +51,13 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
   const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
+    if ([...queryParams.keys()].includes('grid')) {
+      const decodedGrid = decodeGrid(queryParams.get('grid')!);
+      setGrid(decodedGrid.grid);
+      setTimer(decodedGrid.timer);
+      setFirstClicked(true);
+      setQueryParams({});
+    }
     timerTracker = window.setInterval(() => {
       setTimer((timer) => timer + 1);
     }, 1000);
@@ -61,6 +65,12 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
       clearInterval(timerTracker ?? 0);
     };
   }, []);
+
+  function shareGame() {
+    const text = encodeGrid(grid, timer);
+    navigator.clipboard.writeText(`${window.location.origin}/#/game/${difficulty}?grid=${text}`);
+    alert('Game link copied to clipboard');
+  }
 
   function recalculateProbabilities() {
     console.time('calculateProbabilities');
@@ -110,8 +120,8 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
 
   function cascadeOpen(row: number, col: number, grid: ITile[][]) {
     grid = [...grid];
-    if (grid[row][col].state === TileState.Opened) return grid;
-    grid[row][col].state = TileState.Opened;
+    if (grid[row][col].state === 'opened') return grid;
+    grid[row][col].state = 'opened';
     const tile = grid[row][col];
     if (tile.adjacent !== 0 || tile.mine) {
       return grid;
@@ -147,7 +157,7 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
         const col = i % width;
         newGrid[row][col] = {
           mine: true,
-          state: TileState.Hidden,
+          state: 'hidden',
           adjacent: 0,
         };
       }
@@ -175,7 +185,7 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
     leftClickCount++;
     if (gameOver) return;
     console.log('leftclicked tile', { row, col }, grid[row][col]);
-    if (grid[row][col].state === TileState.Opened) {
+    if (grid[row][col].state === 'opened') {
       console.log('tile already opened');
       return;
     }
@@ -202,7 +212,7 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
     // Check if any open tiles remaining
     for (let i = 0; i < TILE_COUNT; i++) {
       const { row, col } = indexToCoords(i, width);
-      if (grid[row][col].state === TileState.Hidden && !grid[row][col].mine) {
+      if (grid[row][col].state === 'hidden' && !grid[row][col].mine) {
         return;
       }
     }
@@ -213,17 +223,17 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
   function handleRightClick(row: number, col: number) {
     if (gameOver) return;
     console.log('rightclicked tile', { row, col }, grid[row][col]);
-    if (grid[row][col].state === TileState.Opened) {
+    if (grid[row][col].state === 'opened') {
       return;
     }
     const newGrid = [...grid];
     const tile = newGrid[row][col];
-    if (tile.state === TileState.Hidden) {
+    if (tile.state === 'hidden') {
       setRemainingMines((old) => old - 1);
-      tile.state = TileState.Flagged;
+      tile.state = 'flagged';
     } else {
       setRemainingMines((old) => old + 1);
-      tile.state = TileState.Hidden;
+      tile.state = 'hidden';
     }
     setGrid(newGrid);
   }
@@ -234,14 +244,21 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
         <button>
           <Link to="/difficulty">Back to menu</Link>
         </button>
+        {firstClicked && (
+          <div>
+            <button onClick={shareGame}>share</button>
+          </div>
+        )}
+        <div>
+          <button onClick={() => setShowProbability((old) => !old)}>
+            {showProbability ? 'Showing probabilities' : 'Not showing probabilities'}
+          </button>
+        </div>
 
-        <div className="timer">{timer}s</div>
-        <button onClick={() => setShowProbability((old) => !old)}>
-          {showProbability ? 'Showing probabilities' : 'Not showing probabilities'}
-        </button>
         <div>
           <button onClick={recalculateProbabilities}>Recalculate probabilities</button>
         </div>
+        <div className="timer">{timer}s</div>
         <div>Remaining mines: {remainingMines}</div>
       </header>
       <main>

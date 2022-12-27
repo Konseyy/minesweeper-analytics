@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
-export type GameState = 'menu' | 'playing' | 'won' | 'lost';
 
 const DifficultyPicker = () => {
   return (

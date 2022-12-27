@@ -24,6 +24,7 @@ export function getSurroundingCoords(row: number, col: number, width: number, he
   const adjcentCoords: { row: number; col: number }[] = [];
   for (const r of existingRows) {
     for (const c of existingCols) {
+      if (r === row && c === col) continue; // Skip the given tile (itself
       adjcentCoords.push({ row: r, col: c });
     }
   }
