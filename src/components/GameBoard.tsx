@@ -52,11 +52,15 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
 
   useEffect(() => {
     if ([...queryParams.keys()].includes('grid')) {
-      const decodedGrid = decodeGrid(queryParams.get('grid')!);
-      setGrid(decodedGrid.grid);
-      setTimer(decodedGrid.timer);
-      setFirstClicked(true);
-      setQueryParams({});
+      try {
+        const decodedGrid = decodeGrid(queryParams.get('grid')!);
+        setGrid(decodedGrid.grid);
+        setTimer(decodedGrid.timer);
+        setFirstClicked(true);
+        setQueryParams({});
+      } catch (e) {
+        console.error(e);
+      }
     }
     timerTracker = window.setInterval(() => {
       setTimer((timer) => timer + 1);

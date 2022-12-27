@@ -24,7 +24,10 @@ export function encodeGrid(grid: ITile[][], timer: number): string {
     .map((row) => {
       return row
         .map((tile) => {
-          if (tile.mine) return 'M';
+          if (tile.mine) {
+            if (tile.state === 'flagged') return 'X';
+            return 'M';
+          }
           if (tile.state === 'opened') return 'O';
           if (tile.state === 'flagged') return 'F';
           return 'H';
@@ -63,13 +66,13 @@ export function decodeGrid(encodedString: string): { grid: ITile[][]; timer: num
         state: 'hidden',
         adjacent: 0,
       };
-      if (char === 'M') {
+      if (char === 'M' || char === 'X') {
         tile.mine = true;
       }
       if (char === 'O') {
         tile.state = 'opened';
       }
-      if (char === 'F') {
+      if (char === 'F' || char === 'X') {
         tile.state = 'flagged';
       }
       grid[i].push(tile);
