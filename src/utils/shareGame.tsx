@@ -36,12 +36,12 @@ export function encodeGrid(grid: ITile[][], timer: number): string {
     })
     .join('');
   const reducedGrid = replaceDuplicates(mappedGrid);
-  return `${width}-${timer}-${reducedGrid}`;
+  return `${width.toString(36)}-${timer.toString(36)}-${reducedGrid}`;
 }
 export function decodeGrid(encodedString: string): { grid: ITile[][]; timer: number } {
   const splitInfo = encodedString.split('-');
-  const width = parseInt(splitInfo[0]);
-  const timer = parseInt(splitInfo[1]);
+  const width = parseInt(splitInfo[0], 36);
+  const timer = parseInt(splitInfo[1], 36);
   let gridString = splitInfo[2];
   for (let i = 0, j; i < gridString.length; i++) {
     if (!isNaN(parseInt(gridString[i]))) {

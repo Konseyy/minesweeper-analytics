@@ -58,6 +58,7 @@ const GameBoard: FC<GameBoardProps> = ({}) => {
         setTimer(decodedGrid.timer);
         setFirstClicked(true);
         setQueryParams({});
+        setRemainingMines(MINE_COUNT - decodedGrid.grid.flat().filter((tile) => tile.state === 'flagged').length);
       } catch (e) {
         console.error(e);
       }
