@@ -15,6 +15,9 @@ const DifficultyPicker = () => {
       <button>
         <Link to="/game/hard">Hard</Link>
       </button>
+      <button>
+        <Link to={`/multiplayer/`}>Multiplayer</Link>
+      </button>
     </div>
   );
 };
