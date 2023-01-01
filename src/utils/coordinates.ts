@@ -9,8 +9,17 @@ export function indexToCoords(index: number, width: number) {
 }
 
 // Returns coordinates of existing tiles around the given tile
-export function getSurroundingCoords(row: number, col: number, width: number, height: number, length?: number) {
-  const searchLength = length ?? 1;
+export function getSurroundingCoords(
+  row: number,
+  col: number,
+  width: number,
+  height: number,
+  options?: {
+    length?: number;
+    includeSelf?: boolean;
+  }
+) {
+  const searchLength = options?.length ?? 1;
   const possibleRows = [row];
   for (let i = 1; i < searchLength + 1; i++) {
     possibleRows.push(row - i, row + i);
@@ -24,7 +33,7 @@ export function getSurroundingCoords(row: number, col: number, width: number, he
   const adjcentCoords: { row: number; col: number }[] = [];
   for (const r of existingRows) {
     for (const c of existingCols) {
-      if (r === row && c === col) continue; // Skip the given tile (itself
+      if (r === row && c === col && Boolean(options?.includeSelf) === false) continue; // Skip the given tile (itself
       adjcentCoords.push({ row: r, col: c });
     }
   }

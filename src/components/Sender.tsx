@@ -1,21 +1,34 @@
 import { DataConnection } from 'peerjs';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 } from 'uuid';
 import { usePeer } from '../hooks/usePeer';
 import { P2PMessageType, receivedDataValidator } from '../utils/grid';
 import { ITile } from './GameBoard';
 import MultiplayerBoard from './MultiplayerBoard';
-const senderId = v4();
 
 const Sender = ({ otherId }: { otherId: string }) => {
+  const senderId = useRef(v4()).current;
   const navigate = useNavigate();
   const localPeer = usePeer(senderId);
   const [connected, setConnected] = useState(false);
   const [remoteState, setRemoteState] = useState<ITile[][]>([]);
   const [connection, setConnection] = useState<DataConnection | null>(null);
 
-  localPeer.on('open', () => {
+  useEffect(() => {
+    return () => {
+      connection?.close();
+    };
+  }, [connection]);
+
+  useEffect(() => {
+    localPeer.on('open', setupPeer);
+    return () => {
+      localPeer.destroy();
+    };
+  }, [localPeer]);
+
+  function setupPeer() {
     const con = localPeer.connect(otherId);
     setConnection(con);
     con.on('open', () => {
@@ -43,15 +56,16 @@ const Sender = ({ otherId }: { otherId: string }) => {
       } else {
         console.error('invalid data', validated.error);
       }
-      console.log('data received', data);
     });
     con.on('error', (err) => {
       console.error('error receiver', err);
     });
     con.on('close', () => {
+      localPeer.reconnect();
       setConnected(false);
+      navigate('/');
     });
-  });
+  }
 
   function sendData(data: P2PMessageType) {
     connection?.send(data);

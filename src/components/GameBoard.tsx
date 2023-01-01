@@ -162,7 +162,7 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
     const allIndexes = Array.from(Array(TILE_COUNT).keys());
     const mineIndexes = [];
     // Make sure first click area is not a mine
-    const firstClickArea = getSurroundingCoords(clickRow, clickCol, width, height, 2);
+    const firstClickArea = getSurroundingCoords(clickRow, clickCol, width, height, { length: 2, includeSelf: true });
     const firstClickAreaIndexes = firstClickArea.map((coord) => coordsToIndex(coord.row, coord.col, width));
     const filteredIndexes = allIndexes.filter((index) => !firstClickAreaIndexes.includes(index));
 
@@ -206,8 +206,8 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
 
   function handleLeftClick(row: number, col: number) {
     if (multiplayer && !props.local) return;
-    leftClickCount++;
     if (gameOver) return;
+    leftClickCount++;
     console.log('leftclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === 'opened') {
       console.log('tile already opened');
