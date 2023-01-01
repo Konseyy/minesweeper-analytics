@@ -8,8 +8,7 @@ function App() {
   const router = createHashRouter(
     createRoutesFromElements(
       <>
-        <Route path="/" element={<Navigate to={'/difficulty'} />}></Route>
-        <Route index path="difficulty" element={<DifficultyPicker />} />
+        <Route path="/" element={<DifficultyPicker />} />
         <Route path="game/:difficulty" element={<GameBoard />} />
         <Route path="multiplayer" element={<MultiplayerContainer />} />
       </>
