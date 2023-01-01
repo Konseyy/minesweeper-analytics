@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react';
 import { calculateProbabilities } from '../utils/probabilities';
 import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils/coordinates';
-import { Difficulty } from './DifficultyPicker';
+import { Difficulty } from './Menu';
 import Tile from './Tile';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { decodeGrid, encodeGrid } from '../utils/shareGame';

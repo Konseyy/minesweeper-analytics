@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
-const DifficultyPicker = () => {
+const Menu = () => {
   return (
     <div style={{ display: 'flex', gap: '5px' }}>
       <button>
@@ -16,10 +16,10 @@ const DifficultyPicker = () => {
         <Link to="/game/hard">Hard</Link>
       </button>
       <button>
-        <Link to={`/multiplayer/`}>Multiplayer</Link>
+        <Link to={`/multiplayer/`}>Multiplayer (Chrome only)</Link>
       </button>
     </div>
   );
 };
 
-export default DifficultyPicker;
+export default Menu;
