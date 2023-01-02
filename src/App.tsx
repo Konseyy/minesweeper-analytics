@@ -1,4 +1,3 @@
-import './App.css';
 import Menu from './components/Menu';
 import { createHashRouter, createRoutesFromElements, Route, RouterProvider, Navigate } from 'react-router-dom';
 import GameBoard from './components/GameBoard';

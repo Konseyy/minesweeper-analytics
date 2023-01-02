@@ -1,23 +1,55 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLocalstorage } from '../hooks/useLocalstorage';
+import { secondsToMinuteString } from '../utils/formatTime';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
+export type HighScores = {
+  [difficulty: string]: { time: number; date: number };
+};
+
 const Menu = () => {
+  const [highScores] = useLocalstorage<HighScores>('highScores', {});
   return (
-    <div style={{ display: 'flex', gap: '5px' }}>
-      <button>
-        <Link to="/game/easy">Easy</Link>
-      </button>
-      <button>
-        <Link to="/game/medium">Medium</Link>
-      </button>
-      <button>
-        <Link to="/game/hard">Hard</Link>
-      </button>
-      <button>
-        <Link to={`/multiplayer/`}>Multiplayer (Chrome only)</Link>
-      </button>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: '5px' }}>
+        <Link to="/game/easy">
+          <button>Easy</button>
+        </Link>
+        <Link to="/game/medium">
+          <button>Medium</button>
+        </Link>
+        <Link to="/game/hard">
+          <button>Hard</button>
+        </Link>
+        <Link to={`/multiplayer/`}>
+          <button>Multiplayer (Chrome only)</button>
+        </Link>
+      </div>
+      <div style={{ marginTop: 15 }}>
+        <div>Highscores: </div>
+        <table style={{ border: '1px solid black', borderCollapse: 'collapse', textAlign: 'center' }}>
+          <thead>
+            <tr>
+              {['Difficulty', 'Time', 'Date'].map((title) => (
+                <th style={{ border: '1px solid black', padding: 5 }}>{title}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(highScores).map(([difficulty, entry]) => {
+              return (
+                <tr>
+                  <td style={{ border: '1px solid black', padding: '2px 8px' }}>{difficulty}</td>
+                  <td style={{ border: '1px solid black', padding: '2px 8px' }}>{secondsToMinuteString(entry.time)}</td>
+                  <td style={{ border: '1px solid black', padding: '2px 8px' }}>{new Date(entry.date).toLocaleString('en-UK')}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

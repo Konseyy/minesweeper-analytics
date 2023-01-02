@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react';
 import { calculateProbabilities } from '../utils/probabilities';
 import { coordsToIndex, getSurroundingCoords, indexToCoords } from '../utils/coordinates';
-import { Difficulty } from './Menu';
+import { Difficulty, HighScores } from './Menu';
 import Tile from './Tile';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { decodeGrid, encodeGrid } from '../utils/shareGame';
@@ -17,6 +17,7 @@ import {
   MEDIUM_MINES,
   MEDIUM_WIDTH,
 } from '../utils/grid';
+import { useLocalstorage } from '../hooks/useLocalstorage';
 type TileState = 'hidden' | 'opened' | 'flagged';
 
 export interface ITile {
@@ -67,6 +68,8 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
   const [timer, setTimer] = useState(0);
   const [gameOver, setGameOver] = useState(false);
 
+  const [highScores, setHighscores] = useLocalstorage<HighScores>('highScores', {});
+
   const gridToDisplay = multiplayer && !props.local ? props.receivedState : grid;
 
   useEffect(() => {
@@ -113,19 +116,19 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
   function endGame(won: boolean) {
     if (timerTracker !== null) clearInterval(timerTracker);
 
-    if (!multiplayer) {
-      const highScores = localStorage.getItem('highScores');
+    if (!multiplayer && won) {
       if (highScores) {
-        const parsed = JSON.parse(highScores);
-        if (parsed[difficulty!] === undefined || timer < parsed[difficulty!].time) {
-          parsed[difficulty!] = { time: timer, date: Date.now() };
-          localStorage.setItem('highScores', JSON.stringify(parsed));
+        const parsed = { ...highScores };
+        if (parsed[difficulty] === undefined || timer < parsed[difficulty].time) {
+          parsed[difficulty] = { time: timer, date: Date.now() };
+          setHighscores(parsed);
         }
       }
       const newHighScores = {
-        [difficulty!]: { time: timer, date: Date.now() },
+        ...highScores,
+        [difficulty]: { time: timer, date: Date.now() },
       };
-      localStorage.setItem('highScores', JSON.stringify(newHighScores));
+      setHighscores(newHighScores);
     }
 
     setGameOver(true);
