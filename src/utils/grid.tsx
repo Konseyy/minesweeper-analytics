@@ -1,5 +1,6 @@
 import z from 'zod';
-export function getStartingGrid(height: number, width: number) {
+import { ITile } from '../components/GameBoard';
+export function getStartingGrid(height: number, width: number): ITile[][] {
   const grid = Array(height);
   for (let row = 0; row < height; row++) {
     grid[row] = Array(width);
@@ -10,13 +11,13 @@ export function getStartingGrid(height: number, width: number) {
   return grid;
 }
 
-const DEFAULT_TILE = {
+const DEFAULT_TILE: ITile = {
   mine: false,
   state: 'hidden',
   adjacent: 0,
 };
 
-function getDefaultTile() {
+export function getDefaultTile(): ITile {
   return { ...DEFAULT_TILE };
 }
 

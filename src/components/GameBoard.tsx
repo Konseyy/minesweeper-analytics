@@ -163,7 +163,7 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
   function generateMines(clickRow: number, clickCol: number) {
     console.log('Generating mines');
     const allIndexes = Array.from(Array(TILE_COUNT).keys());
-    const mineIndexes = [];
+    const mineIndexes: number[] = [];
     // Make sure first click area is not a mine
     const firstClickArea = getSurroundingCoords(clickRow, clickCol, width, height, { length: 2, includeSelf: true });
     const firstClickAreaIndexes = firstClickArea.map((coord) => coordsToIndex(coord.row, coord.col, width));
