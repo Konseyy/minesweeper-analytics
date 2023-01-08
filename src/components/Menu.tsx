@@ -12,19 +12,25 @@ export type HighScores = {
 const Menu = () => {
   const [highScores] = useLocalstorage<HighScores>('highScores', {});
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: '5px' }}>
-        <Link to="/game/easy">
-          <button>Easy</button>
-        </Link>
-        <Link to="/game/medium">
-          <button>Medium</button>
-        </Link>
-        <Link to="/game/hard">
-          <button>Hard</button>
-        </Link>
+    <div>
+      <div className="difficultyPicker">
+        <span>Choose difficulty</span>
+        <div className="difficultyContainer">
+          <Link to="/game/easy">
+            <button className="difficultyButton">Easy</button>
+          </Link>
+          <Link to="/game/medium">
+            <button className="difficultyButton">Medium</button>
+          </Link>
+          <Link to="/game/hard">
+            <button className="difficultyButton">Hard</button>
+          </Link>
+        </div>
+      </div>
+
+      <div>
         <Link to={`/multiplayer/`}>
-          <button>Multiplayer (Chrome only)</button>
+          <button className="multiplayerButton">Multiplayer (Chrome only)</button>
         </Link>
       </div>
       <div style={{ marginTop: 15 }}>

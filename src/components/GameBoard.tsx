@@ -267,48 +267,54 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
   }
 
   return (
-    <div className="gameBoard">
-      <header>
-        {!multiplayer && (
-          <button>
-            <Link to="/">Back to menu</Link>
-          </button>
-        )}
-        {firstClicked && !multiplayer && (
-          <div>
-            <button onClick={shareGame}>share</button>
-          </div>
-        )}
-        {!multiplayer && (
-          <div>
-            <button onClick={() => setShowProbability((old) => !old)}>
-              {showProbability ? 'Showing probabilities' : 'Not showing probabilities'}
-            </button>
-          </div>
-        )}
-        {!multiplayer && <div className="timer">{timer}s</div>}
-        <div>Remaining mines: {remainingMines}</div>
-      </header>
-      <main>
-        {gridToDisplay.map((row, rowIndex) => {
-          return (
-            <div key={rowIndex} className="row" style={{ display: 'flex' }}>
-              {row.map((tile, colIndex) => {
-                return (
-                  <Tile
-                    showProbability={showProbability}
-                    gameOver={gameOver}
-                    tile={tile}
-                    key={colIndex}
-                    handleLeftClick={() => handleLeftClick(rowIndex, colIndex)}
-                    handleRightClick={() => handleRightClick(rowIndex, colIndex)}
-                  />
-                );
-              })}
+    <div className="gameBoardContainer">
+      <div className="gameBoard">
+        <header>
+          {!multiplayer && (
+            <Link to="/">
+              <button>Back to menu</button>
+            </Link>
+          )}
+          {firstClicked && !multiplayer && (
+            <div>
+              <button onClick={shareGame}>share</button>
             </div>
-          );
-        })}
-      </main>
+          )}
+          {!multiplayer && (
+            <div>
+              <button onClick={() => setShowProbability((old) => !old)}>
+                {showProbability ? 'Showing probabilities' : 'Not showing probabilities'}
+              </button>
+            </div>
+          )}
+          <div className="gameData">
+            <div>Remaining mines: {remainingMines}</div>
+            {!multiplayer && <div className="timer">{timer}s</div>}
+          </div>
+        </header>
+        <main>
+          <div>
+            {gridToDisplay.map((row, rowIndex) => {
+              return (
+                <div key={rowIndex} className="row" style={{ display: 'flex' }}>
+                  {row.map((tile, colIndex) => {
+                    return (
+                      <Tile
+                        showProbability={showProbability}
+                        gameOver={gameOver}
+                        tile={tile}
+                        key={colIndex}
+                        handleLeftClick={() => handleLeftClick(rowIndex, colIndex)}
+                        handleRightClick={() => handleRightClick(rowIndex, colIndex)}
+                      />
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

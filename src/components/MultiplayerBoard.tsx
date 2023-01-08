@@ -17,9 +17,9 @@ const MultiplayerBoard: FC<Props> = ({ receivedState, sendData }) => {
   }
   return (
     <div>
-      <button>
-        <Link to="/">Back to menu</Link>
-      </button>
+      <Link to="/">
+        <button>Back to menu</button>
+      </Link>
       <div style={{ display: 'flex', gap: 5 }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div>Your Board:</div>
