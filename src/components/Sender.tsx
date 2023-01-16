@@ -9,11 +9,11 @@ import MultiplayerBoard from './MultiplayerBoard';
 
 const Sender = ({ otherId }: { otherId: string }) => {
   const senderId = useRef(v4()).current;
-  const navigate = useNavigate();
   const localPeer = usePeer(senderId);
   const [connected, setConnected] = useState(false);
   const [remoteState, setRemoteState] = useState<ITile[][]>([]);
   const [connection, setConnection] = useState<DataConnection | null>(null);
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -34,6 +34,7 @@ const Sender = ({ otherId }: { otherId: string }) => {
     con.on('open', () => {
       localPeer.disconnect(); // Dont accept any more connections
       setConnected(true);
+      setGameOver(false);
       console.log('Connection opened');
     });
     con.on('data', (data) => {
@@ -45,12 +46,12 @@ const Sender = ({ otherId }: { otherId: string }) => {
             setRemoteState(validated.data.data);
             break;
           case 'state':
+            setGameOver(true);
             if (validated.data.data.won) {
               alert('Opponent won!');
             } else {
               alert('Opponent lost!');
             }
-            navigate('/');
             break;
         }
       } else {
@@ -62,8 +63,6 @@ const Sender = ({ otherId }: { otherId: string }) => {
     });
     con.on('close', () => {
       localPeer.reconnect();
-      setConnected(false);
-      navigate('/');
     });
   }
 
@@ -75,7 +74,7 @@ const Sender = ({ otherId }: { otherId: string }) => {
     <div>
       {connected ? (
         <>
-          <MultiplayerBoard receivedState={remoteState} sendData={sendData} />
+          <MultiplayerBoard receivedState={remoteState} sendData={sendData} remoteGameOver={gameOver} />
         </>
       ) : (
         <>

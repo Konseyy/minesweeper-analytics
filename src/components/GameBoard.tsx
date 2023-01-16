@@ -40,18 +40,19 @@ type MultiplayerGameBoardProps =
       local: true;
       sendGridUpdate: (grid: ITile[][]) => void;
       sendGameStateUpdate: (won: boolean) => void;
+      remoteGameOver: boolean;
     })
   | {
       multiplayer: true;
       local: false;
-      receivedState: ITile[][];
+      receivedGrid: ITile[][];
+      gameOver: boolean;
     };
 
 let leftClickCount = 0;
 let timerTracker: number | null = null;
 
 const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
-  const navigate = useNavigate();
   const multiplayer = 'multiplayer' in props;
   const difficulty = useParams().difficulty as Difficulty;
   const height = difficulty === 'easy' ? EASY_HEIGHT : difficulty === 'medium' ? MEDIUM_HEIGHT : HARD_HEIGHT;
@@ -66,11 +67,13 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
   const [showProbability, setShowProbability] = useState(false);
   const [remainingMines, setRemainingMines] = useState(MINE_COUNT);
   const [timer, setTimer] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+  const gameOverState = useState(false);
+  const gameOver = multiplayer && !props.local ? props.gameOver : gameOverState[0];
+  const setGameOver = gameOverState[1];
 
   const [highScores, setHighscores] = useLocalstorage<HighScores>('highScores', {});
 
-  const gridToDisplay = multiplayer && !props.local ? props.receivedState : grid;
+  const gridToDisplay = multiplayer && !props.local ? props.receivedGrid : grid;
 
   useEffect(() => {
     if (multiplayer) return;
@@ -138,9 +141,6 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
     } else {
       if (multiplayer && props.local) props.sendGameStateUpdate(false);
       alert(`You lost! (${timer}s)`);
-    }
-    if (multiplayer) {
-      navigate('/');
     }
   }
 
@@ -210,6 +210,7 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
   function handleLeftClick(row: number, col: number) {
     if (multiplayer && !props.local) return;
     if (gameOver) return;
+    if (multiplayer && props.local && props.remoteGameOver) return;
     leftClickCount++;
     console.log('leftclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === 'opened') {
@@ -250,6 +251,7 @@ const GameBoard: FC<GameBoardProps | MultiplayerGameBoardProps> = (props) => {
   function handleRightClick(row: number, col: number) {
     if (multiplayer && !props.local) return;
     if (gameOver) return;
+    if (multiplayer && props.local && props.remoteGameOver) return;
     console.log('rightclicked tile', { row, col }, grid[row][col]);
     if (grid[row][col].state === 'opened') {
       return;
