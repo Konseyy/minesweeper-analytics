@@ -15,7 +15,7 @@ export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number,
       const emptyNeighbors = unopenedNeighbors.filter((n) => gameBoard[n.row][n.col].mineProbability === 0);
       if (currentTile.state === 'opened') {
         if (currentTile.adjacent === unopenedNeighbors.length - emptyNeighbors.length) {
-          // If amount of adjacent mines is equal to adjacent tiles, all are mines
+          // If amount of adjacent mines is equal to adjacent tiles that could hold mines, all such tiles are mines
           for (const n of unopenedNeighbors) {
             if (gameBoard[n.row][n.col].mineProbability !== 100 && gameBoard[n.row][n.col].mineProbability !== 0) {
               gameBoard[n.row][n.col].mineProbability = 100;
@@ -25,7 +25,7 @@ export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number,
           if (changed) break; // if a change was made, recalculate probabilities again
         }
         if (currentTile.adjacent === guaranteedNeighbors.length) {
-          // If all adjacent mines are already known, the rest are safe
+          // If all adjacent mines are already known, the other adjacent tiles are safe
           for (const n of unopenedNeighbors) {
             if (gameBoard[n.row][n.col].mineProbability === 100) continue; // dont overwrite 100% probability
             if (gameBoard[n.row][n.col].mineProbability !== 0) {
@@ -39,8 +39,11 @@ export function calculateProbabilities(gameBoard: ITile[][], boardWidth: number,
           if (gameBoard[n.row][n.col].mineProbability === 100) continue; // dont overwrite 100% probability
           if (gameBoard[n.row][n.col].mineProbability === 0) continue; // dont overwrite 0% probability
           const neighborsWithoutMines = unopenedNeighbors.filter((n) => gameBoard[n.row][n.col].mineProbability !== 100);
-          const newProbability = Math.round(
-            ((currentTile.adjacent - guaranteedNeighbors.length) / (neighborsWithoutMines.length - emptyNeighbors.length)) * 100
+          const newProbability = Math.min(
+            Math.round(
+              ((currentTile.adjacent - guaranteedNeighbors.length) / (neighborsWithoutMines.length - emptyNeighbors.length)) * 100
+            ),
+            100
           );
           const prevProbability = gameBoard[n.row][n.col].mineProbability;
           const prevTurnIdentifier = gameBoard[n.row][n.col].changedOnTurnIdentifier;

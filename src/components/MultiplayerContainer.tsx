@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Receiver from './Receiver';
 import Sender from './Sender';
 
@@ -9,7 +9,20 @@ const MultiplayerContainer = () => {
   const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 
   return (
-    <div>{isChrome ? <div>{otherId ? <Sender otherId={otherId} /> : <Receiver />}</div> : <div>Multiplayer only works on Chrome</div>}</div>
+    <div>
+      {isChrome ? (
+        <div>{otherId ? <Sender otherId={otherId} /> : <Receiver />}</div>
+      ) : (
+        <div>
+          <div>
+            <Link to="/">
+              <button>Back to menu</button>
+            </Link>
+          </div>
+          Multiplayer only works on Chrome
+        </div>
+      )}
+    </div>
   );
 };
 

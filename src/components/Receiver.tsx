@@ -1,11 +1,13 @@
 import { DataConnection } from 'peerjs';
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { v4 } from 'uuid';
 import { usePeer } from '../hooks/usePeer';
 import { P2PMessageType, receivedDataValidator } from '../utils/grid';
 import { ITile } from './GameBoard';
 import MultiplayerBoard from './MultiplayerBoard';
+
+let disconnectTimer: number;
 
 const Receiver = () => {
   const receiverId = useRef(v4()).current;
@@ -25,6 +27,7 @@ const Receiver = () => {
     localPeer.on('connection', setupPeer);
     return () => {
       localPeer.destroy();
+      clearTimeout(disconnectTimer ?? 0);
     };
   }, [localPeer]);
 
@@ -62,6 +65,9 @@ const Receiver = () => {
     });
     con.on('close', () => {
       localPeer.reconnect();
+      disconnectTimer = setTimeout(() => {
+        alert('Opponent disconnected');
+      }, 1000);
     });
   }
 
@@ -74,6 +80,9 @@ const Receiver = () => {
         <MultiplayerBoard receivedState={remoteState} sendData={sendData} remoteGameOver={gameOver} />
       ) : (
         <>
+          <Link to="/">
+            <button>Back to menu</button>
+          </Link>
           <div>{localPeer.id}</div>
           <button
             onClick={() => {

@@ -1,11 +1,13 @@
 import { DataConnection } from 'peerjs';
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { v4 } from 'uuid';
 import { usePeer } from '../hooks/usePeer';
 import { P2PMessageType, receivedDataValidator } from '../utils/grid';
 import { ITile } from './GameBoard';
 import MultiplayerBoard from './MultiplayerBoard';
+
+let disconnectTimer: number;
 
 const Sender = ({ otherId }: { otherId: string }) => {
   const senderId = useRef(v4()).current;
@@ -25,6 +27,7 @@ const Sender = ({ otherId }: { otherId: string }) => {
     localPeer.on('open', setupPeer);
     return () => {
       localPeer.destroy();
+      clearTimeout(disconnectTimer ?? 0);
     };
   }, [localPeer]);
 
@@ -63,6 +66,9 @@ const Sender = ({ otherId }: { otherId: string }) => {
     });
     con.on('close', () => {
       localPeer.reconnect();
+      disconnectTimer = setTimeout(() => {
+        alert('Opponent disconnected');
+      }, 1000);
     });
   }
 
@@ -78,6 +84,9 @@ const Sender = ({ otherId }: { otherId: string }) => {
         </>
       ) : (
         <>
+          <Link to="/">
+            <button>Back to menu</button>
+          </Link>
           <div>{localPeer.id}</div>
           Sender
         </>
